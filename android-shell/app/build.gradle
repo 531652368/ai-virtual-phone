@@ -3,9 +3,14 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-// 签名：CI 里通过环境变量注入 keystore（见 android-shell/README.md）；
-// 没有配置时 release 构建产出未签名 APK，debug 构建始终可直接安装测试。
-def ksFile = System.getenv("SHELL_KEYSTORE_FILE")
+// 签名：CI 通过环境变量注入 keystore（见 android-shell/README.md）。
+// 密钥本体只在 Runner 临时目录解码，不进入源码/仓库/构建日志。
+// - SHELLKEYSTOREBASE64     密钥库 Base64 → 工作流解码为临时文件 SHELLKEYSTOREFILE
+// - SHELLKEYSTOREPASSWORD   密钥库密码
+// - SHELLKEYALIAS           密钥别名
+// - SHELLKEYPASSWORD        密钥密码
+// 未配置时 release 构建产出未签名 APK；debug 构建始终可直接安装测试。
+def ksFile = System.getenv("SHELLKEYSTOREFILE")
 def siteUrl = (System.getenv("SHELL_SITE_URL") ?: "https://example.invalid").replaceAll('/+$', '')
 
 android {
@@ -27,9 +32,9 @@ android {
         signingConfigs {
             release {
                 storeFile file(ksFile)
-                storePassword System.getenv("SHELL_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("SHELL_KEY_ALIAS")
-                keyPassword System.getenv("SHELL_KEY_PASSWORD")
+                storePassword System.getenv("SHELLKEYSTOREPASSWORD")
+                keyAlias System.getenv("SHELLKEYALIAS")
+                keyPassword System.getenv("SHELLKEYPASSWORD")
             }
         }
     }
